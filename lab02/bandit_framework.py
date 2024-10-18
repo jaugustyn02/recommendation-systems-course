@@ -40,19 +40,19 @@ class Runner:
     # this method runs each and every bandit algorithm `runs` times, for given `epochs` in each run
     #   and returns all the results and payouts which then can be plotted by the latter method
     def simulate(self, runs: int, epochs: int, recommendation_size: int) -> Dict[str, List[List[float]]]:
-        results = {}
+        results: Dict[str, List[List[float]]] = {}
         for bandit in self.bandits:
             print("Simulating: %s" % bandit.bandit_id)
             results[bandit.bandit_id] = []
             for _run in range(runs):
-                run_results = []
+                run_results: list[float] = []
                 for _epoch in range(epochs):
                     recommendation = bandit.recommend(recommendation_size)
                     # detect recommendations with duplicated entries
                     if len(recommendation) != len(set(recommendation)):
                         raise DuplicatedEntriesException("Recommendation %s contains duplicated entries!" % recommendation)
 
-                    epoch_payout = 0.0
+                    epoch_payout: float = 0.0
                     for arm_id in recommendation:
                         payout = self.arms[arm_id].pull()
                         epoch_payout += payout
@@ -61,16 +61,16 @@ class Runner:
                 results[bandit.bandit_id].append(run_results)
         return results
     
-    def plot_results(self, results: Dict[str, List[List[float]]], runs: int, epochs: int, mode='cumulative', scale='linear'):
-        average = {bandit_id: [] for bandit_id in results}
-        cumulative = {bandit_id: [] for bandit_id in results}
+    def plot_results(self, results: Dict[str, List[List[float]]], runs: int, epochs: int, mode: str ='cumulative', scale: str ='linear'):
+        average: Dict[str, List[float]] = {bandit_id: [] for bandit_id in results}
+        cumulative: Dict[str, List[float]] = {bandit_id: [] for bandit_id in results}
         for bandit_id in results:
             for e in range(epochs):
-                epoch_results = []
+                epoch_results: List[float] = []
                 for r in range(runs):
                     epoch_results.append(results[bandit_id][r][e])
                 
-                avg_result = sum(epoch_results) / runs
+                avg_result: float = sum(epoch_results) / runs
                 average[bandit_id].append(avg_result)
                 if e == 0:
                     cumulative[bandit_id].append(avg_result)
@@ -80,17 +80,17 @@ class Runner:
         if mode == 'cumulative':
             self.print_aggregated_results(cumulative)
             for bandit_id in cumulative:
-                plt.plot(cumulative[bandit_id], label=bandit_id)
+                plt.plot(cumulative[bandit_id], label=bandit_id) # type: ignore
         elif mode == 'average':
             self.print_aggregated_results(average)
             for bandit_id in average:
-                plt.plot(average[bandit_id], label=bandit_id)
+                plt.plot(average[bandit_id], label=bandit_id) # type: ignore
         
-        plt.yscale(scale)
-        plt.legend()
-        plt.show()
+        plt.yscale(scale) # type: ignore
+        plt.legend() # type: ignore
+        plt.show() # type: ignore
 
-    def print_aggregated_results(self, aggregated: Dict[str, float]):
+    def print_aggregated_results(self, aggregated: Dict[str, List[float]]):
         print("\nAggregated results:\n")
         for bandit_id, total_payout in sorted(aggregated.items(), key=lambda x: x[1][-1], reverse=True):
             print('%s: %s' % (bandit_id, total_payout[-1]))
